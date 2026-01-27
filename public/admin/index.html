@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | BookHaven</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            background: var(--off-white);
+        }
+
+        .login-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Left Side - Branding */
+        .login-brand {
+            background: linear-gradient(135deg, var(--primary-navy) 0%, #2c3e50 100%);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-brand::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M0 60 L60 0" stroke="rgba(212,175,55,0.05)" stroke-width="1" fill="none"/></svg>');
+            opacity: 0.4;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .brand-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .brand-logo img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        .brand-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+
+        .brand-subtitle {
+            font-size: 1.25rem;
+            color: var(--accent-gold);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .brand-features {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: left;
+            margin-top: 3rem;
+        }
+
+        .brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-gold);
+            color: var(--primary-navy);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-feature-text {
+            flex: 1;
+        }
+
+        .brand-feature-text h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .brand-feature-text p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+
+        /* Right Side - Form */
+        .login-form-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            background: var(--white);
+        }
+
+        .login-form-container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .login-header {
+            margin-bottom: 3rem;
+        }
+
+        .login-header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-navy);
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        .login-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            color: var(--primary-navy);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--off-white);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: var(--primary-navy);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-gold);
+            color: var(--primary-navy);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        #error-msg {
+            display: none;
+            background: #fee;
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-weight: 600;
+            border-left: 4px solid var(--danger);
+        }
+
+        .back-home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            transition: all 0.3s ease;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .back-home-btn:hover {
+            border-color: var(--primary-navy);
+            color: var(--primary-navy);
+            background: var(--off-white);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-container {
+                grid-template-columns: 1fr;
+            }
+
+            .login-brand {
+                display: none;
+            }
+
+            .login-form-section {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <!-- Left Side - Branding -->
+        <div class="login-brand">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <img src="../images/logo.png" alt="BookHaven">
+                </div>
+                <h1 class="brand-title">BookHaven</h1>
+                <p class="brand-subtitle">Your premium destination for discovering and managing the world's best books
+                </p>
+
+                <div class="brand-features">
+                    <div class="brand-feature">
+                        <div class="brand-feature-icon">
+                            <span class="material-icons-round">inventory_2</span>
+                        </div>
+                        <div class="brand-feature-text">
+                            <h3>Inventory Management</h3>
+                            <p>Complete control over your book collection</p>
+                        </div>
+                    </div>
+                    <div class="brand-feature">
+                        <div class="brand-feature-icon">
+                            <span class="material-icons-round">analytics</span>
+                        </div>
+                        <div class="brand-feature-text">
+                            <h3>Sales Analytics</h3>
+                            <p>Track orders and revenue in real-time</p>
+                        </div>
+                    </div>
+                    <div class="brand-feature">
+                        <div class="brand-feature-icon">
+                            <span class="material-icons-round">security</span>
+                        </div>
+                        <div class="brand-feature-text">
+                            <h3>Secure Platform</h3>
+                            <p>Enterprise-grade security for your data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-form-section">
+            <div class="login-form-container">
+                <div class="login-header">
+                    <h1>Admin Panel</h1>
+                    <p>Sign in to manage your bookstore</p>
+                </div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required
+                            placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required
+                            placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="login-btn">Sign In</button>
+                    <div id="error-msg">Invalid credentials. Please try again.</div>
+                </form>
+
+                <a href="../index.html" class="back-home-btn">
+                    <span class="material-icons-round">arrow_back</span>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+    <script>
+        // Check if already logged in
+        if (sessionStorage.getItem('adminUser')) {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+
+</html>

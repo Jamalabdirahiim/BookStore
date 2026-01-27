@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart | BookHaven</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <img src="images/logo.png" alt="BookHaven">
+                    <span class="logo-text">BookHaven</span>
+                </a>
+                <div class="nav-links">
+                    <a href="index.html">Home</a>
+                    <a href="shop.html">Shop</a>
+                    <a href="cart.html" class="active">Cart</a>
+                    <div class="cart-icon" onclick="window.location.href='cart.html'">
+                        <span class="material-icons-round">shopping_cart</span> <span class="cart-count">0</span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="section">
+        <div class="container">
+            <h1 class="section-title">Your Cart</h1>
+
+            <div id="cart-content">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-items">
+                        <!-- Items -->
+                    </tbody>
+                </table>
+
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total:</span>
+                        <span id="total">$0.00</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    <h2 class="section-title" style="margin-bottom: 2rem; font-size: 1.5rem;">Checkout</h2>
+                    <form id="checkout-form">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" required placeholder="Ali Farah">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Delivery Address</label>
+                            <textarea class="form-control" id="address" rows="2" required
+                                placeholder="District, Street/Landmark"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <div class="payment-grid">
+                                <div class="payment-card active" onclick="selectPayment('evc')">
+                                    <span class="payment-icon material-icons-round">smartphone</span>
+                                    <div class="payment-name">EVC Plus</div>
+                                </div>
+                                <div class="payment-card" onclick="selectPayment('card')">
+                                    <span class="payment-icon material-icons-round">credit_card</span>
+                                    <div class="payment-name">Credit Card</div>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Fields -->
+                            <div id="evc-fields" class="payment-fields">
+                                <label class="form-label">Mobile Number (EVC)</label>
+                                <input type="tel" class="form-control" placeholder="61 XX XX XX" required
+                                    id="evc-number">
+                                <small style="color: #64748b; margin-top: 0.5rem; display: block;">You will receive a
+                                    prompt on your phone.</small>
+                            </div>
+
+                            <div id="card-fields" class="payment-fields hidden">
+                                <div class="form-group">
+                                    <label class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" placeholder="0000 0000 0000 0000"
+                                        id="card-number">
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div>
+                                        <label class="form-label">Expiry</label>
+                                        <input type="text" class="form-control" placeholder="MM/YY" id="card-expiry">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">CVV</label>
+                                        <input type="text" class="form-control" placeholder="123" id="card-cvv">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn" style="width: 100%;">Pay Now & Place Order</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Processing Overlay -->
+            <div id="processing-overlay" class="processing-overlay hidden">
+                <div class="spinner"></div>
+                <h3 id="processing-text" style="font-size: 1.25rem; margin-top: 1.5rem;">Processing Payment...</h3>
+                <p id="processing-detail" style="margin-top: 0.5rem; color: #94a3b8;">Please wait, do not close this
+                    window.</p>
+            </div>
+
+            <div id="empty-cart" class="text-center hidden">
+                <p style="font-size: 1.2rem; margin-bottom: 1rem;">Your cart is empty.</p>
+                <a href="shop.html" class="btn">Start Shopping</a>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+    <script>
+        let currentPayment = 'evc';
+
+        function selectPayment(method) {
+            currentPayment = method;
+
+            // Toggle classes
+            const cards = document.querySelectorAll('.payment-card');
+            cards.forEach(c => c.classList.remove('active'));
+
+            if (method === 'evc') {
+                document.querySelectorAll('.payment-card')[0].classList.add('active');
+                document.getElementById('evc-fields').classList.remove('hidden');
+                document.getElementById('card-fields').classList.add('hidden');
+
+                // Toggle required
+                document.getElementById('evc-number').required = true;
+                document.getElementById('card-number').required = false;
+                document.getElementById('card-expiry').required = false;
+                document.getElementById('card-cvv').required = false;
+            } else {
+                document.querySelectorAll('.payment-card')[1].classList.add('active');
+                document.getElementById('evc-fields').classList.add('hidden');
+                document.getElementById('card-fields').classList.remove('hidden');
+
+                // Toggle required
+                document.getElementById('evc-number').required = false;
+                document.getElementById('card-number').required = true;
+                document.getElementById('card-expiry').required = true;
+                document.getElementById('card-cvv').required = true;
+            }
+        }
+
+        function renderCart() {
+            const tbody = document.getElementById('cart-items');
+            const cartContent = document.getElementById('cart-content');
+            const emptyContent = document.getElementById('empty-cart');
+
+            if (state.cart.length === 0) {
+                cartContent.classList.add('hidden');
+                emptyContent.classList.remove('hidden');
+                return;
+            }
+
+            cartContent.classList.remove('hidden');
+            emptyContent.classList.add('hidden');
+
+            let subtotal = 0;
+
+            tbody.innerHTML = state.cart.map((item, index) => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                return `
+                    <tr>
+                        <td>${item.title}</td>
+                        <td>${formatPrice(item.price)}</td>
+                        <td><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${item.quantity}</span></td>
+                        <td>${formatPrice(itemTotal)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline" style="color: #ef4444; border-color: #ef4444; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="removeItem(${index})">Remove</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('subtotal').textContent = formatPrice(subtotal);
+            document.getElementById('total').textContent = formatPrice(subtotal);
+        }
+
+        function removeItem(index) {
+            state.cart.splice(index, 1);
+            saveCart();
+            renderCart();
+        }
+
+        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (state.cart.length === 0) {
+                alert("Cart is empty!");
+                return;
+            }
+
+            // Simulate Processing
+            const overlay = document.getElementById('processing-overlay');
+            const processText = document.getElementById('processing-text');
+            const processDetail = document.getElementById('processing-detail');
+
+            overlay.classList.remove('hidden');
+
+            // Show payment-specific messages
+            if (currentPayment === 'evc') {
+                processText.textContent = "Waiting for EVC Plus Confirmation...";
+                processDetail.textContent = "Please check your phone and approve the payment request.";
+            } else {
+                processText.textContent = "Contacting Bank...";
+                processDetail.textContent = "Verifying your card details securely.";
+            }
+
+            // Delay 3 seconds for realistic simulation
+            setTimeout(async () => {
+                // Update to processing state
+                processText.textContent = "Processing Your Order...";
+                processDetail.textContent = "Please wait while we finalize your order.";
+
+                const order = {
+                    customer_name: document.getElementById('name').value,
+                    address: document.getElementById('address').value,
+                    total: state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+                    items: state.cart,
+                    payment_method: currentPayment === 'evc' ? 'EVC Plus' : 'Credit Card'
+                };
+
+                try {
+                    const res = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(order)
+                    });
+
+                    if (res.ok) {
+                        processText.textContent = "Payment Successful!";
+                        processDetail.textContent = "Thank you for your order. Redirecting...";
+                        setTimeout(() => {
+                            state.cart = [];
+                            saveCart();
+                            alert('Order Placed Successfully! You will receive a confirmation shortly.');
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        processText.textContent = "Payment Failed";
+                        processDetail.textContent = "There was an issue processing your payment.";
+                        setTimeout(() => {
+                            alert('Failed to place order. Please try again.');
+                            overlay.classList.add('hidden');
+                        }, 1500);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    processText.textContent = "Connection Error";
+                    processDetail.textContent = "Unable to reach the server.";
+                    setTimeout(() => {
+                        alert('Error connecting to server. Please check your connection.');
+                        overlay.classList.add('hidden');
+                    }, 1500);
+                }
+            }, 3000);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCart();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | BookHaven Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #ffffff;
+            --sidebar-hover: #f1f5f9;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --active-bg: var(--primary-navy);
+            --active-text: var(--white);
+            --active-icon: var(--primary-gold);
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            font-family: 'Inter', sans-serif;
+            color: #334155;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #334155;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .sidebar-logo img {
+            height: 48px;
+            /* width: auto; Intentionally auto to maintain aspect ratio */
+            border-radius: 8px;
+            /* Slight roundness */
+        }
+
+        .sidebar-logo span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.025em;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            color: #64748b;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            /* Ensure full width */
+            box-sizing: border-box;
+        }
+
+        .nav-item:hover {
+            background-color: var(--sidebar-hover);
+            color: #0f172a;
+        }
+
+        .nav-item.active {
+            background-color: var(--active-bg);
+            color: var(--active-text);
+            box-shadow: 0 4px 12px rgba(26, 35, 50, 0.3);
+        }
+
+        .nav-item.active .material-icons-round {
+            color: var(--active-icon);
+        }
+
+        /* Fixed Button Styles in Table */
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            line-height: 1;
+            height: auto;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ensure table actions row doesn't break */
+        td .btn {
+            margin-right: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem 3rem;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.025em;
+        }
+
+        /* Cards & Stats */
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            /* Gradient Text */
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            text-align: left;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Badges & Buttons */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .btn {
+            border-radius: 8px;
+            /* Tighter radius for admin buttons */
+            padding: 0.6rem 1.25rem;
+        }
+
+        /* Tabs */
+        .tab-content {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+<body>
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <img src="../images/logo.png" alt="BookHaven Logo">
+            <span>BookHaven</span>
+        </div>
+        <nav>
+            <div class="nav-item active" onclick="switchTab('overview')">
+                <span class="material-icons-round">dashboard</span> Overview
+            </div>
+            <div class="nav-item" onclick="switchTab('books')">
+                <span class="material-icons-round">library_books</span> Inventory
+            </div>
+            <div class="nav-item" onclick="switchTab('orders')">
+                <span class="material-icons-round">shopping_bag</span> Orders
+            </div>
+            <div class="nav-item" onclick="logout()" style="margin-top: auto; color: #ef4444; margin-top: auto;">
+                <span class="material-icons-round">logout</span> Logout
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="dashboard-header">
+                <h1>Overview</h1>
+                <div style="font-size: 0.9rem; color: #64748b;">Welcome back, Admin</div>
+            </div>
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <h3>Total Books</h3>
+                    <div class="value" id="total-books">0</div>
+                </div>
+                <div class="card stat-card">
+                    <h3>Total Orders</h3>
+                    <div class="value" id="total-orders">0</div>
+                </div>
+                <div class="card stat-card">
+                    <h3>Total Revenue</h3>
+                    <div class="value" id="total-rev">$0.00</div>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Recent Orders</h2>
+                    <button class="btn btn-sm btn-outline" onclick="switchTab('orders')">View All</button>
+                </div>
+                <div class="table-container">
+                    <table id="recent-orders-table">
+                        <!-- Populated by JS -->
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Tab -->
+        <div id="books" class="tab-content">
+            <div class="dashboard-header">
+                <h1>Book Inventory</h1>
+                <button class="btn btn-gold" onclick="openBookModal()">+ Add New Book</button>
+            </div>
+            <div class="card">
+                <div class="table-container">
+                    <table id="books-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cover</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="orders" class="tab-content">
+            <div class="dashboard-header">
+                <h1>Order Management</h1>
+                <button class="btn btn-outline" onclick="fetchAdminData()">Refresh Data</button>
+            </div>
+            <div class="card">
+                <div class="table-container">
+                    <table id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Book Modal -->
+    <div id="book-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBookModal()">&times;</span>
+            <h2 id="modal-title" style="margin-bottom: 1.5rem;">Add New Book</h2>
+            <form id="book-form">
+                <input type="hidden" id="book-id">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" id="book-title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Author</label>
+                    <input type="text" class="form-control" id="book-author" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-control" id="book-category">
+                        <option>Self-Help</option>
+                        <option>Business</option>
+                        <option>Fiction</option>
+                        <option>Biography</option>
+                        <option>Psychology</option>
+                        <option>Technology</option>
+                        <option>History</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price ($)</label>
+                    <input type="number" step="0.01" class="form-control" id="book-price" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Book Cover Image</label>
+                    <!-- File Input for new uploads -->
+                    <input type="file" class="form-control" id="book-image-file" accept="image/*">
+                    <!-- Hidden input to store the final URL (either existing or newly uploaded) -->
+                    <input type="hidden" id="book-image-url">
+                    <div id="current-image-preview" style="margin-top: 0.5rem; font-size: 0.85rem; color: #64748b;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="book-desc" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Save Book</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+    <script>
+        // Check Auth
+        if (!sessionStorage.getItem('adminUser')) {
+            window.location.href = 'index.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+        });
+    </script>
+</body>
+
+</html>

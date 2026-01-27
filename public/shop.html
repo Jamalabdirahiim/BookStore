@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | BookHaven</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <img src="images/logo.png" alt="BookHaven">
+                    <span class="logo-text">BookHaven</span>
+                </a>
+                <div class="nav-links">
+                    <a href="index.html">Home</a>
+                    <a href="shop.html" class="active">Shop</a>
+                    <a href="admin/index.html">Admin</a>
+                    <div class="cart-icon" onclick="window.location.href='cart.html'">
+                        <span class="material-icons-round">shopping_cart</span> <span class="cart-count">0</span>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="section">
+        <div class="container">
+            <h1 class="section-title">Browse Our Collection</h1>
+
+            <!-- Enhanced Filter Section -->
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <div class="filters" id="category-filters">
+                        <button class="filter-btn active" onclick="filterBooks('All')">All Books</button>
+                        <button class="filter-btn" onclick="filterBooks('Self-Help')">Self-Help</button>
+                        <button class="filter-btn" onclick="filterBooks('Business')">Business</button>
+                        <button class="filter-btn" onclick="filterBooks('Fiction')">Fiction</button>
+                        <button class="filter-btn" onclick="filterBooks('Biography')">Biography</button>
+                        <button class="filter-btn" onclick="filterBooks('Psychology')">Psychology</button>
+                        <button class="filter-btn" onclick="filterBooks('Technology')">Technology</button>
+                        <button class="filter-btn" onclick="filterBooks('History')">History</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="book-grid" id="shop-grid">
+                <div class="text-center" style="grid-column: 1/-1;">Loading books...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <h3>About Us</h3>
+                    <p>BookHaven is your premium destination for discovering and purchasing the world's best books.
+                        We're dedicated to bringing the joy of reading to book lovers everywhere.</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="shop.html">Shop</a></li>
+                        <li><a href="cart.html">Cart</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>Email: hello@bookhaven.com</li>
+                        <li>Phone: +1 (555) 123-4567</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2026 BookHaven. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        let allBooks = [];
+
+        async function loadShop() {
+            allBooks = await fetchBooks();
+            renderBooks(allBooks);
+        }
+
+        function renderBooks(books) {
+            const grid = document.getElementById('shop-grid');
+            if (books.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><h2>No books found</h2><p>Try adjusting your filters</p></div>';
+                return;
+            }
+            grid.innerHTML = books.map(book => `
+                <div class="book-card fade-in">
+                    <div class="book-image-container">
+                        <img src="${book.image_url}" alt="${book.title}" class="book-image">
+                    </div>
+                    <div class="book-info">
+                        <div class="book-cat">${book.category || 'General'}</div>
+                        <h3 class="book-title">${book.title}</h3>
+                        <p class="book-author">by ${book.author}</p>
+                        <p class="book-description">${book.description || ''}</p>
+                        <div class="book-footer">
+                            <span class="book-price">${formatPrice(book.price)}</span>
+                            <button class="btn btn-sm btn-primary" onclick="addToCart(${book.id})">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterBooks(category) {
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === category || (category === 'All' && btn.textContent === 'All Books')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            if (category === 'All') {
+                renderBooks(allBooks);
+            } else {
+                const filtered = allBooks.filter(b => b.category === category);
+                renderBooks(filtered);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadShop);
+    </script>
+
+    <style>
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.625rem 1.25rem;
+            background: var(--white);
+            color: var(--text-secondary);
+            border: 2px solid var(--light-gray);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-gold);
+            color: var(--primary-navy);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-navy);
+            color: var(--white);
+            border-color: var(--primary-navy);
+        }
+    </style>
+</body>
+
+</html>
