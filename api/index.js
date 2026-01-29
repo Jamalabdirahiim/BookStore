@@ -112,13 +112,31 @@ app.get('/api/orders', (req, res) => {
     res.json({ data: [] });
 });
 
-// Admin Login
-app.post('/api/login', (req, res) => {
-    const users = readData(usersPath);
-    const { username, password } = req.body;
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) res.json({ message: 'Login successful', user });
-    else res.status(401).json({ message: 'Invalid credentials' });
+// --- MANAGEMENT API ---
+
+// Mock Upload (Vercel is read-only, so we just return a placeholder)
+app.post('/api/upload', (req, res) => {
+    res.json({ url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400' });
+});
+
+app.post('/api/books', (req, res) => {
+    console.log("Adding Book:", req.body);
+    // Simulation: Returns success to the frontend
+    res.json({ message: 'Book added (Simulated)', id: Date.now() });
+});
+
+app.put('/api/books/:id', (req, res) => {
+    console.log("Updating Book:", req.params.id, req.body);
+    res.json({ message: 'Book updated (Simulated)' });
+});
+
+app.delete('/api/books/:id', (req, res) => {
+    console.log("Deleting Book:", req.params.id);
+    res.json({ message: 'Book deleted (Simulated)' });
+});
+
+app.put('/api/orders/:id/status', (req, res) => {
+    res.json({ message: 'Status updated (Simulated)' });
 });
 
 // Root handler
