@@ -43,7 +43,8 @@ const WAAFI_CONFIG = {
 };
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
 // Explicitly serve static files
 const publicPath = path.join(process.cwd(), 'public');
