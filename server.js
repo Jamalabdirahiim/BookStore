@@ -20,10 +20,18 @@ const WAAFI_CONFIG = {
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Explicitly serve static files from the public directory using process.cwd()
+const publicPath = path.join(process.cwd(), 'public');
+app.use(express.static(publicPath));
+
+// Ensure index.html is served for the root route on Vercel
+app.get('/', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
 
 // Ensure Upload Directory Exists (Local only)
-const uploadDir = path.join(__dirname, 'public/uploads');
+const uploadDir = path.join(publicPath, 'uploads');
 if (process.env.NODE_ENV !== 'production') {
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

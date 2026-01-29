@@ -1,13 +1,21 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.resolve(__dirname, 'database', 'bookstore.db');
+// Use process.cwd() for reliable pathing on Vercel
+const dbPath = path.join(process.cwd(), 'database', 'bookstore.db');
 
-const db = new sqlite3.Database(dbPath, (err) => {
+// In production (Vercel), we open the database in READONLY mode to prevent crashes on the read-only filesystem.
+const mode = process.env.NODE_ENV === 'production'
+    ? sqlite3.OPEN_READONLY
+    : (sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE);
+
+console.log(`Connecting to database at: ${dbPath} (Mode: ${process.env.NODE_ENV === 'production' ? 'READONLY' : 'READWRITE'})`);
+
+const db = new sqlite3.Database(dbPath, mode, (err) => {
     if (err) {
-        console.error('Could not connect to database', err);
+        console.error('DATABASE CONNECTION ERROR:', err.message);
     } else {
-        console.log('Connected to SQLite database');
+        console.log('Connected to SQLite database successfully');
     }
 });
 
