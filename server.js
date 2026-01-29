@@ -2,28 +2,38 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer'); // Import multer
+const multer = require('multer');
+const axios = require('axios');
 const db = require('./database');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
+
+// WaafiPay Credentials
+const WAAFI_CONFIG = {
+    merchantUid: process.env.WAAFI_MERCHANT_UID || "M1001234",
+    apiUserId: process.env.WAAFI_API_USER_ID || "1001234",
+    apiKey: process.env.WAAFI_API_KEY || "API-12345678W",
+    baseUrl: process.env.WAAFI_BASE_URL || "https://api.waafipay.net/asm"
+};
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const fs = require('fs');
-
-// Ensure Upload Directory Exists
+// Ensure Upload Directory Exists (Local only)
 const uploadDir = path.join(__dirname, 'public/uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+if (process.env.NODE_ENV !== 'production') {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
 }
 
 // Configure Multer for File Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, uploadDir); // Use absolute path
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -32,157 +42,155 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// API Routes
+// --- PAYMENT API ---
 
-// Upload Endpoint
-app.post('/api/upload', upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+// Process WaafiPay Payment (EVC Plus or Credit Card)
+app.post('/api/payment/process', async (req, res) => {
+    const { paymentMethod, amount, phoneNumber, cardDetails } = req.body;
+
+    try {
+        const requestId = Date.now().toString();
+
+        let paymentParams = {
+            schemaVersion: "1.0",
+            requestId: requestId,
+            timestamp: requestId,
+            channelName: "WEB",
+            serviceName: "API_PURCHASE",
+            serviceParams: {
+                merchantUid: WAAFI_CONFIG.merchantUid,
+                apiUserId: WAAFI_CONFIG.apiUserId,
+                apiKey: WAAFI_CONFIG.apiKey,
+                paymentMethod: paymentMethod === 'evc' ? "MWALLET_ACCOUNT" : "CREDIT_CARD",
+                payerInfo: {},
+                transactionInfo: {
+                    amount: amount.toString(),
+                    currency: "USD",
+                    description: "Bookstore Purchase"
+                }
+            }
+        };
+
+        if (paymentMethod === 'evc') {
+            paymentParams.serviceParams.payerInfo.accountNo = phoneNumber;
+        } else {
+            paymentParams.serviceParams.payerInfo.cardNo = cardDetails.number;
+            paymentParams.serviceParams.payerInfo.expiryDate = cardDetails.expiry; // MMYY
+            paymentParams.serviceParams.payerInfo.cvv2 = cardDetails.cvv;
+        }
+
+        console.log("Calling WaafiPay API for:", paymentMethod);
+        const response = await axios.post(WAAFI_CONFIG.baseUrl, paymentParams);
+
+        if (response.data.responseCode === "2001") {
+            res.json({ success: true, transactionId: response.data.params?.transactionId });
+        } else {
+            res.status(400).json({
+                success: false,
+                message: response.data.responseMsg || "Payment Rejected by WaafiPay"
+            });
+        }
+    } catch (error) {
+        console.error("WaafiPay Error:", error.message);
+        res.status(500).json({ success: false, message: "Payment Gateway Error" });
     }
-    // Return the URL path
+});
+
+// --- CORE API ROUTES ---
+
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     res.json({ url: '/uploads/' + req.file.filename });
 });
 
-// GET all books
 app.get('/api/books', (req, res) => {
     const { category } = req.query;
     let sql = 'SELECT * FROM books';
     let params = [];
-
     if (category) {
         sql += ' WHERE category = ?';
         params.push(category);
     }
-
     db.all(sql, params, (err, rows) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ data: rows });
     });
 });
 
-// GET book by id
 app.get('/api/books/:id', (req, res) => {
-    const sql = 'SELECT * FROM books WHERE id = ?';
-    const params = [req.params.id];
-    db.get(sql, params, (err, row) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
+    db.get('SELECT * FROM books WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ data: row });
     });
 });
 
-// ADD a new book (Admin)
 app.post('/api/books', (req, res) => {
     const { title, author, price, category, description, image_url, stock } = req.body;
-    const sql = 'INSERT INTO books (title, author, price, category, description, image_url, stock) VALUES (?,?,?,?,?,?,?)';
-    const params = [title, author, price, category, description, image_url, stock];
-
-    db.run(sql, params, function (err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json({ message: 'Book created', id: this.lastID });
-    });
+    db.run('INSERT INTO books (title, author, price, category, description, image_url, stock) VALUES (?,?,?,?,?,?,?)',
+        [title, author, price, category, description, image_url, stock], function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Book created', id: this.lastID });
+        });
 });
 
-// UPDATE a book (Admin)
 app.put('/api/books/:id', (req, res) => {
     const { title, author, price, category, description, image_url, stock } = req.body;
-    const sql = 'UPDATE books SET title = ?, author = ?, price = ?, category = ?, description = ?, image_url = ?, stock = ? WHERE id = ?';
-    const params = [title, author, price, category, description, image_url, stock, req.params.id];
-
-    db.run(sql, params, function (err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json({ message: 'Book updated' });
-    });
+    db.run('UPDATE books SET title = ?, author = ?, price = ?, category = ?, description = ?, image_url = ?, stock = ? WHERE id = ?',
+        [title, author, price, category, description, image_url, stock, req.params.id], function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: 'Book updated' });
+        });
 });
 
-// DELETE a book (Admin)
 app.delete('/api/books/:id', (req, res) => {
-    const sql = 'DELETE FROM books WHERE id = ?';
-    const params = [req.params.id];
-
-    db.run(sql, params, function (err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
+    db.run('DELETE FROM books WHERE id = ?', [req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Book deleted' });
     });
 });
 
-// PLACE Order
 app.post('/api/orders', (req, res) => {
-    const { customer_name, address, total, items } = req.body;
+    const { customer_name, address, total, items, transactionId } = req.body;
     const sql = 'INSERT INTO orders (customer_name, address, total, items, status, date) VALUES (?,?,?,?,?,?)';
-    const params = [customer_name, address, total, JSON.stringify(items), 'Access', new Date().toISOString()];
+    const params = [customer_name, address, total, JSON.stringify(items), 'Paid', new Date().toISOString()];
 
     db.run(sql, params, function (err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Order placed', id: this.lastID });
     });
 });
 
-// GET Orders (Admin)
 app.get('/api/orders', (req, res) => {
-    const sql = 'SELECT * FROM orders ORDER BY date DESC';
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
+    db.all('SELECT * FROM orders ORDER BY date DESC', [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ data: rows });
     });
 });
 
-// UPDATE Order Status (Admin)
 app.put('/api/orders/:id/status', (req, res) => {
     const { status } = req.body;
-    const sql = 'UPDATE orders SET status = ? WHERE id = ?';
-    const params = [status, req.params.id];
-
-    db.run(sql, params, function (err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
+    db.run('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Order status updated' });
     });
 });
 
-// Simple Admin Login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    // In a real app, use hashed passwords.
-    // For this prototype, we'll check against the database or hardcoded for simplicity, 
-    // but let's do database check to be consistent.
-    const sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
-    db.get(sql, [username, password], (err, row) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        if (row) {
-            res.json({ message: 'Login successful', user: row });
-        } else {
-            res.status(401).json({ message: 'Invalid credentials' });
-        }
+    db.get('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (row) res.json({ message: 'Login successful', user: row });
+        else res.status(401).json({ message: 'Invalid credentials' });
     });
 });
 
+// --- SERVER INITIALIZATION ---
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// For Vercel, we export the app. For local, we listen on the port.
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app; // Export for Vercel

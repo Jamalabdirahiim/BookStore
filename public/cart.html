@@ -220,70 +220,84 @@
                 return;
             }
 
-            // Simulate Processing
             const overlay = document.getElementById('processing-overlay');
             const processText = document.getElementById('processing-text');
             const processDetail = document.getElementById('processing-detail');
 
             overlay.classList.remove('hidden');
 
-            // Show payment-specific messages
+            const amount = state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            const paymentData = {
+                paymentMethod: currentPayment,
+                amount: amount
+            };
+
             if (currentPayment === 'evc') {
-                processText.textContent = "Waiting for EVC Plus Confirmation...";
-                processDetail.textContent = "Please check your phone and approve the payment request.";
+                processText.textContent = "Requesting EVC Plus Payment...";
+                processDetail.textContent = "Please check your phone for the PIN prompt.";
+                paymentData.phoneNumber = document.getElementById('evc-number').value;
             } else {
-                processText.textContent = "Contacting Bank...";
-                processDetail.textContent = "Verifying your card details securely.";
+                processText.textContent = "Processing Card Payment...";
+                processDetail.textContent = "Connecting to the secure bank gateway.";
+                paymentData.cardDetails = {
+                    number: document.getElementById('card-number').value.replace(/\s/g, ''),
+                    expiry: document.getElementById('card-expiry').value.replace(/\//g, ''),
+                    cvv: document.getElementById('card-cvv').value
+                };
             }
 
-            // Delay 3 seconds for realistic simulation
-            setTimeout(async () => {
-                // Update to processing state
-                processText.textContent = "Processing Your Order...";
-                processDetail.textContent = "Please wait while we finalize your order.";
+            try {
+                // 1. Process Real Payment via WaafiPay
+                const payRes = await fetch('/api/payment/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(paymentData)
+                });
+
+                const payData = await payRes.json();
+
+                if (!payRes.ok) throw new Error(payData.message || "Payment Failed");
+
+                // 2. If Payment Success, Create Order
+                processText.textContent = "Payment Successful!";
+                processDetail.textContent = "Finalizing your order details...";
 
                 const order = {
                     customer_name: document.getElementById('name').value,
                     address: document.getElementById('address').value,
-                    total: state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+                    total: amount,
                     items: state.cart,
-                    payment_method: currentPayment === 'evc' ? 'EVC Plus' : 'Credit Card'
+                    transactionId: payData.transactionId
                 };
 
-                try {
-                    const res = await fetch('/api/orders', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(order)
-                    });
+                const orderRes = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(order)
+                });
 
-                    if (res.ok) {
-                        processText.textContent = "Payment Successful!";
-                        processDetail.textContent = "Thank you for your order. Redirecting...";
-                        setTimeout(() => {
-                            state.cart = [];
-                            saveCart();
-                            alert('Order Placed Successfully! You will receive a confirmation shortly.');
-                            window.location.href = 'index.html';
-                        }, 1500);
-                    } else {
-                        processText.textContent = "Payment Failed";
-                        processDetail.textContent = "There was an issue processing your payment.";
-                        setTimeout(() => {
-                            alert('Failed to place order. Please try again.');
-                            overlay.classList.add('hidden');
-                        }, 1500);
-                    }
-                } catch (err) {
-                    console.error(err);
-                    processText.textContent = "Connection Error";
-                    processDetail.textContent = "Unable to reach the server.";
+                if (orderRes.ok) {
+                    processText.textContent = "Order Confirmed!";
+                    processDetail.textContent = "Redirecting you to the home page.";
                     setTimeout(() => {
-                        alert('Error connecting to server. Please check your connection.');
-                        overlay.classList.add('hidden');
-                    }, 1500);
+                        state.cart = [];
+                        saveCart();
+                        alert('Order Placed Successfully with WaafiPay!');
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    throw new Error("Payment was successful but order failed to save. Please contact support.");
                 }
-            }, 3000);
+
+            } catch (err) {
+                console.error(err);
+                processText.textContent = "Payment Error";
+                processDetail.textContent = err.message;
+                setTimeout(() => {
+                    alert('Error: ' + err.message);
+                    overlay.classList.add('hidden');
+                }, 3000);
+            }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
