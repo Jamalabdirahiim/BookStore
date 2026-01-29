@@ -97,9 +97,9 @@ function renderOverview() {
     const recent = adminOrders.slice(0, 5);
     const table = document.getElementById('recent-orders-table');
     if (table) {
-        table.innerHTML = recent.map(o => `
+        table.innerHTML = recent.map((o, idx) => `
             <tr>
-                <td>#${o.id}</td>
+                <td>#${idx + 1}</td>
                 <td>${o.customer_name}</td>
                 <td>$${o.total.toFixed(2)}</td>
                 <td><span class="status-badge status-${o.status}">${o.status}</span></td>
@@ -112,9 +112,9 @@ function renderBooksTable() {
     const tbody = document.querySelector('#books-table tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = adminBooks.map(book => `
+    tbody.innerHTML = adminBooks.map((book, idx) => `
         <tr>
-            <td>${book.id}</td>
+            <td>${idx + 1}</td>
             <td>
                 <img src="${book.image_url}" alt="Cover" style="width: 40px; height: 56px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             </td>
@@ -123,8 +123,8 @@ function renderBooksTable() {
             <td><span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${book.category}</span></td>
             <td style="font-weight: 600;">$${book.price.toFixed(2)}</td>
             <td>
-                <button class="btn btn-sm btn-outline" style="margin-right: 0.5rem;" onclick="editBook(${book.id})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteBook(${book.id})">Delete</button>
+                <button class="btn btn-sm btn-outline" style="margin-right: 0.5rem;" onclick="editBook('${book.id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteBook('${book.id}')">Delete</button>
             </td>
         </tr>
     `).join('');
@@ -134,13 +134,13 @@ function renderOrdersTable() {
     const tbody = document.querySelector('#orders-table tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = adminOrders.map(order => {
+    tbody.innerHTML = adminOrders.map((order, idx) => {
         const items = JSON.parse(order.items || '[]');
         const itemsSummary = items.map(i => `${i.title} (x${i.quantity})`).join(', ');
 
         return `
         <tr>
-            <td>${order.id}</td>
+            <td>${idx + 1}</td>
             <td>
                 <div>${order.customer_name}</div>
                 <div style="font-size: 0.75rem; color: #64748b;">${order.address}</div>
@@ -151,7 +151,7 @@ function renderOrdersTable() {
             <td><span class="status-badge status-${order.status}">${order.status}</span></td>
             <td>
                 ${order.status !== 'Shipped' ?
-                `<button class="btn btn-sm btn-primary" onclick="updateOrderStatus(${order.id}, 'Shipped')">Mark Shipped</button>` :
+                `<button class="btn btn-sm btn-primary" onclick="updateOrderStatus('${order.id}', 'Shipped')">Mark Shipped</button>` :
                 `<span style="color: var(--success); font-weight: 600;">✓ Completed</span>`
             }
             </td>
