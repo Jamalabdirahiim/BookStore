@@ -2,13 +2,26 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer');
 const axios = require('axios');
 const fs = require('fs');
-const db = require('../database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Data paths
+const booksPath = path.join(process.cwd(), 'data', 'books.json');
+const usersPath = path.join(process.cwd(), 'data', 'users.json');
+
+// Helper to read JSON data
+const readData = (filePath) => {
+    try {
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error(`Error reading ${filePath}:`, err);
+        return [];
+    }
+};
 
 // WaafiPay Credentials
 const WAAFI_CONFIG = {
@@ -21,17 +34,11 @@ const WAAFI_CONFIG = {
 app.use(cors());
 app.use(bodyParser.json());
 
-// Explicitly serve static files using process.cwd()
+// Explicitly serve static files
 const publicPath = path.join(process.cwd(), 'public');
 app.use(express.static(publicPath));
 
-// Ensure index.html is served for the root route
-app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
-
 // --- PAYMENT API ---
-
 app.post('/api/payment/process', async (req, res) => {
     const { paymentMethod, amount, phoneNumber, cardDetails } = req.body;
     try {
@@ -75,59 +82,52 @@ app.post('/api/payment/process', async (req, res) => {
     }
 });
 
-// --- CORE API ROUTES ---
-
+// --- BOOKS API ---
 app.get('/api/books', (req, res) => {
+    const books = readData(booksPath);
     const { category } = req.query;
-    let sql = 'SELECT * FROM books';
-    let params = [];
     if (category) {
-        sql += ' WHERE category = ?';
-        params.push(category);
+        const filtered = books.filter(b => b.category === category);
+        return res.json({ data: filtered });
     }
-    db.all(sql, params, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ data: rows });
-    });
+    res.json({ data: books });
 });
 
 app.get('/api/books/:id', (req, res) => {
-    db.get('SELECT * FROM books WHERE id = ?', [req.params.id], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ data: row });
-    });
+    const books = readData(booksPath);
+    const book = books.find(b => b.id == req.params.id);
+    if (book) res.json({ data: book });
+    else res.status(404).json({ error: 'Book not found' });
 });
 
+// Orders (Simulation for Vercel)
 app.post('/api/orders', (req, res) => {
-    const { customer_name, address, total, items } = req.body;
-    const sql = 'INSERT INTO orders (customer_name, address, total, items, status, date) VALUES (?,?,?,?,?,?)';
-    const params = [customer_name, address, total, JSON.stringify(items), 'Paid', new Date().toISOString()];
-    db.run(sql, params, function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Order placed', id: this.lastID });
-    });
+    console.log("Order Received:", req.body);
+    // Vercel filesystem is read-only, so we just return success
+    res.json({ message: 'Order received (Simulation)', id: Date.now() });
 });
 
 app.get('/api/orders', (req, res) => {
-    db.all('SELECT * FROM orders ORDER BY date DESC', [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ data: rows });
-    });
+    // Return empty list or simulation data
+    res.json({ data: [] });
 });
 
+// Admin Login
 app.post('/api/login', (req, res) => {
+    const users = readData(usersPath);
     const { username, password } = req.body;
-    db.get('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, row) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (row) res.json({ message: 'Login successful', user: row });
-        else res.status(401).json({ message: 'Invalid credentials' });
-    });
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) res.json({ message: 'Login successful', user });
+    else res.status(401).json({ message: 'Invalid credentials' });
 });
 
-// Export for Vercel
+// Root handler
+app.get('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 module.exports = app;
 
-// Local startup
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`Stable Server running on http://localhost:${PORT}`));
 }
