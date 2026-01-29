@@ -112,14 +112,15 @@ app.get('/api/books/:id', (req, res) => {
 
 // --- ORDERS API ---
 app.post('/api/orders', (req, res) => {
+    const orderId = Date.now();
     const order = {
-        id: Date.now(),
+        id: orderId,
         ...req.body,
         status: 'Paid',
         date: new Date().toISOString()
     };
     ordersCache.push(order);
-    res.json({ message: 'Order placed', id: order.id });
+    res.json({ message: 'Order placed', id: orderId });
 });
 
 app.get('/api/orders', (req, res) => {
@@ -134,12 +135,14 @@ app.post('/api/upload', (req, res) => {
 });
 
 app.post('/api/books', (req, res) => {
+    const bookId = Date.now();
     const newBook = {
-        id: booksCache.length > 0 ? Math.max(...booksCache.map(b => b.id)) + 1 : 1,
-        ...req.body
+        id: bookId,
+        ...req.body,
+        stock: req.body.stock || 10
     };
     booksCache.push(newBook);
-    res.json({ message: 'Book added', id: newBook.id });
+    res.json({ message: 'Book added', id: bookId });
 });
 
 app.put('/api/books/:id', (req, res) => {

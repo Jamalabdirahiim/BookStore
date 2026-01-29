@@ -51,10 +51,9 @@ const fetchBooks = async (category = '') => {
         const customBooks = JSON.parse(localStorage.getItem('customBooks')) || [];
         let combinedBooks = [...data.data];
 
-        // Add custom books that match the category (if any)
         customBooks.forEach(cb => {
-            // Check if it already exists (if edited)
-            const idx = combinedBooks.findIndex(b => b.id === cb.id);
+            // Use String() for safety to ensure ID matches regardless of type (Numeric vs String)
+            const idx = combinedBooks.findIndex(b => String(b.id) === String(cb.id));
             if (idx !== -1) {
                 combinedBooks[idx] = cb;
             } else {

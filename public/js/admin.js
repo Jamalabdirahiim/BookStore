@@ -69,7 +69,17 @@ async function fetchAdminData() {
         const booksData = await booksRes.json();
         const ordersData = await ordersRes.json();
 
-        adminBooks = booksData.data || [];
+        // Merge with local storage custom books
+        const customBooks = JSON.parse(localStorage.getItem('customBooks')) || [];
+        let combinedBooks = [...booksData.data];
+
+        customBooks.forEach(cb => {
+            const idx = combinedBooks.findIndex(b => String(b.id) === String(cb.id));
+            if (idx !== -1) combinedBooks[idx] = cb;
+            else combinedBooks.push(cb);
+        });
+
+        adminBooks = combinedBooks;
         adminOrders = ordersData.data || [];
     } catch (err) {
         console.error("Error loading admin data", err);
