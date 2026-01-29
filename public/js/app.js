@@ -46,8 +46,26 @@ const fetchBooks = async (category = '') => {
         }
         const res = await fetch(url);
         const data = await res.json();
-        state.books = data.data;
-        return data.data;
+
+        // Merge with local storage custom books
+        const customBooks = JSON.parse(localStorage.getItem('customBooks')) || [];
+        let combinedBooks = [...data.data];
+
+        // Add custom books that match the category (if any)
+        customBooks.forEach(cb => {
+            // Check if it already exists (if edited)
+            const idx = combinedBooks.findIndex(b => b.id === cb.id);
+            if (idx !== -1) {
+                combinedBooks[idx] = cb;
+            } else {
+                if (!category || category === 'All' || cb.category === category) {
+                    combinedBooks.push(cb);
+                }
+            }
+        });
+
+        state.books = combinedBooks;
+        return combinedBooks;
     } catch (err) {
         console.error('Error fetching books:', err);
         return [];

@@ -236,6 +236,20 @@ if (bookForm) {
             });
 
             if (res.ok) {
+                const data = await res.json();
+                const savedBook = { ...bookData, id: id || data.id };
+
+                // Save to local persistence
+                let customBooks = JSON.parse(localStorage.getItem('customBooks')) || [];
+                if (id) {
+                    const idx = customBooks.findIndex(b => b.id == id);
+                    if (idx !== -1) customBooks[idx] = savedBook;
+                    else customBooks.push(savedBook);
+                } else {
+                    customBooks.push(savedBook);
+                }
+                localStorage.setItem('customBooks', JSON.stringify(customBooks));
+
                 closeBookModal();
                 initDashboard(); // Refresh
             } else {
@@ -252,7 +266,14 @@ async function deleteBook(id) {
 
     try {
         const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
-        if (res.ok) initDashboard();
+        if (res.ok) {
+            // Also remove from local persistence
+            let customBooks = JSON.parse(localStorage.getItem('customBooks')) || [];
+            customBooks = customBooks.filter(b => b.id != id);
+            localStorage.setItem('customBooks', JSON.stringify(customBooks));
+
+            initDashboard();
+        }
     } catch (err) {
         console.error(err);
     }
