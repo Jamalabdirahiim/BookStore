@@ -200,29 +200,15 @@ if (bookForm) {
         const fileInput = document.getElementById('book-image-file');
         let finalImageUrl = document.getElementById('book-image-url').value;
 
-        // 1. Handle File Upload if present
+        // 1. Handle File Upload if present (Convert to DataURL for Vercel/Memory support)
         if (fileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
-
-            try {
-                const uploadRes = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!uploadRes.ok) {
-                    const errorText = await uploadRes.text();
-                    throw new Error(`Server Error ${uploadRes.status}: ${uploadRes.statusText} \nDetails: ${errorText}`);
-                }
-
-                const uploadData = await uploadRes.json();
-                finalImageUrl = uploadData.url;
-            } catch (err) {
-                console.error("Upload error:", err);
-                alert(`FAILED TO UPLOAD: ${err.message}`);
-                return;
-            }
+            const file = fileInput.files[0];
+            finalImageUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         } else if (!finalImageUrl) {
             // Require image if it's new and no file selected
             alert("Please select a book cover image.");
