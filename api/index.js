@@ -12,16 +12,27 @@ const PORT = process.env.PORT || 3000;
 const booksPath = path.join(process.cwd(), 'data', 'books.json');
 const usersPath = path.join(process.cwd(), 'data', 'users.json');
 
-// Helper to read JSON data
-const readData = (filePath) => {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (err) {
-        console.error(`Error reading ${filePath}:`, err);
-        return [];
-    }
-};
+// --- SMART CACHE (In-Memory Data) ---
+// This allows CRUD to work on Vercel despite the read-only filesystem.
+// Data will reset when the server restarts/cold-starts.
+let booksCache = [];
+let ordersCache = [];
+let usersCache = [];
+
+// Initialization: Load files into memory once
+try {
+    const booksData = fs.readFileSync(booksPath, 'utf8');
+    booksCache = JSON.parse(booksData);
+} catch (e) {
+    console.error("Failed to load books into cache");
+}
+
+try {
+    const usersData = fs.readFileSync(usersPath, 'utf8');
+    usersCache = JSON.parse(usersData);
+} catch (e) {
+    console.error("Failed to load users into cache");
+}
 
 // WaafiPay Credentials
 const WAAFI_CONFIG = {
@@ -84,66 +95,81 @@ app.post('/api/payment/process', async (req, res) => {
 
 // --- BOOKS API ---
 app.get('/api/books', (req, res) => {
-    const books = readData(booksPath);
     const { category } = req.query;
     if (category) {
-        const filtered = books.filter(b => b.category === category);
+        const filtered = booksCache.filter(b => b.category === category);
         return res.json({ data: filtered });
     }
-    res.json({ data: books });
+    res.json({ data: booksCache });
 });
 
 app.get('/api/books/:id', (req, res) => {
-    const books = readData(booksPath);
-    const book = books.find(b => b.id == req.params.id);
+    const book = booksCache.find(b => b.id == req.params.id);
     if (book) res.json({ data: book });
     else res.status(404).json({ error: 'Book not found' });
 });
 
-// Orders (Simulation for Vercel)
+// --- ORDERS API ---
 app.post('/api/orders', (req, res) => {
-    console.log("Order Received:", req.body);
-    // Vercel filesystem is read-only, so we just return success
-    res.json({ message: 'Order received (Simulation)', id: Date.now() });
+    const order = {
+        id: Date.now(),
+        ...req.body,
+        status: 'Paid',
+        date: new Date().toISOString()
+    };
+    ordersCache.push(order);
+    res.json({ message: 'Order placed', id: order.id });
 });
 
 app.get('/api/orders', (req, res) => {
-    // Return empty list or simulation data
-    res.json({ data: [] });
+    res.json({ data: ordersCache });
 });
 
 // --- MANAGEMENT API ---
 
-// Mock Upload (Vercel is read-only, so we just return a placeholder)
+// Mock Upload
 app.post('/api/upload', (req, res) => {
     res.json({ url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400' });
 });
 
 app.post('/api/books', (req, res) => {
-    console.log("Adding Book:", req.body);
-    // Simulation: Returns success to the frontend
-    res.json({ message: 'Book added (Simulated)', id: Date.now() });
+    const newBook = {
+        id: booksCache.length > 0 ? Math.max(...booksCache.map(b => b.id)) + 1 : 1,
+        ...req.body
+    };
+    booksCache.push(newBook);
+    res.json({ message: 'Book added', id: newBook.id });
 });
 
 app.put('/api/books/:id', (req, res) => {
-    console.log("Updating Book:", req.params.id, req.body);
-    res.json({ message: 'Book updated (Simulated)' });
+    const index = booksCache.findIndex(b => b.id == req.params.id);
+    if (index !== -1) {
+        booksCache[index] = { ...booksCache[index], ...req.body };
+        res.json({ message: 'Book updated' });
+    } else {
+        res.status(404).json({ error: 'Book not found' });
+    }
 });
 
 app.delete('/api/books/:id', (req, res) => {
-    console.log("Deleting Book:", req.params.id);
-    res.json({ message: 'Book deleted (Simulated)' });
+    booksCache = booksCache.filter(b => b.id != req.params.id);
+    res.json({ message: 'Book deleted' });
 });
 
 app.put('/api/orders/:id/status', (req, res) => {
-    res.json({ message: 'Status updated (Simulated)' });
+    const index = ordersCache.findIndex(o => o.id == req.params.id);
+    if (index !== -1) {
+        ordersCache[index].status = req.body.status;
+        res.json({ message: 'Status updated' });
+    } else {
+        res.status(404).json({ error: 'Order not found' });
+    }
 });
 
 // Admin Login
 app.post('/api/login', (req, res) => {
-    const users = readData(usersPath);
     const { username, password } = req.body;
-    const user = users.find(u => u.username === username && u.password === password);
+    const user = usersCache.find(u => u.username === username && u.password === password);
     if (user) res.json({ message: 'Login successful', user });
     else res.status(401).json({ message: 'Invalid credentials' });
 });
@@ -156,5 +182,5 @@ app.get('*', (req, res) => {
 module.exports = app;
 
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Stable Server running on http://localhost:${PORT}`));
+    app.listen(PORT, () => console.log(`Smart Server running on http://localhost:${PORT}`));
 }
