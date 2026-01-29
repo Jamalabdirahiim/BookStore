@@ -139,6 +139,15 @@ app.put('/api/orders/:id/status', (req, res) => {
     res.json({ message: 'Status updated (Simulated)' });
 });
 
+// Admin Login
+app.post('/api/login', (req, res) => {
+    const users = readData(usersPath);
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) res.json({ message: 'Login successful', user });
+    else res.status(401).json({ message: 'Invalid credentials' });
+});
+
 // Root handler
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
