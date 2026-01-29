@@ -1,3 +1,4 @@
+console.log("Storefront Logic v1.0.5 Loaded");
 /* Global State */
 const state = {
     cart: JSON.parse(localStorage.getItem('cart')) || [],

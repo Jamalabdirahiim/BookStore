@@ -36,6 +36,7 @@ function logout() {
 }
 
 // Dashboard Logic
+console.log("Admin Logic v1.0.5 Loaded");
 let adminBooks = [];
 let adminOrders = [];
 
