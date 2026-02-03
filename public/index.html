@@ -18,6 +18,35 @@
                     <img src="images/logo.png" alt="BookHaven">
                     <span class="logo-text">BookHaven</span>
                 </a>
+
+                <!-- Search Bar in Nav -->
+                <div class="nav-search" style="flex: 1; max-width: 400px; margin: 0 2rem;">
+                    <div style="position: relative;">
+                        <input type="text" id="search-input" placeholder="Search books..." style="
+                                width: 100%;
+                                padding: 0.65rem 2.5rem 0.65rem 1rem;
+                                font-size: 0.9rem;
+                                border: 2px solid #e2e8f0;
+                                border-radius: 8px;
+                                outline: none;
+                                transition: all 0.3s ease;
+                                font-family: inherit;
+                                background: #f8fafc;
+                            " onkeyup="searchBooksHome()"
+                            onfocus="this.style.borderColor='#d4af37'; this.style.background='white'"
+                            onblur="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc'">
+                        <span class="material-icons-round" style="
+                            position: absolute;
+                            right: 0.75rem;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            color: #94a3b8;
+                            pointer-events: none;
+                            font-size: 20px;
+                        ">search</span>
+                    </div>
+                </div>
+
                 <button class="mobile-menu-toggle" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
@@ -183,6 +212,82 @@
             `).join('');
         });
     </script>
+
+    <script>
+        // Search functionality for home page
+        let allBooksHome = [];
+
+        // Store books when they're loaded
+        const originalFetchBooks = window.fetchBooks;
+        window.fetchBooks = async function () {
+            const books = await originalFetchBooks();
+            allBooksHome = books;
+            return books;
+        };
+
+        function searchBooksHome() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            const grid = document.getElementById('featured-grid');
+
+            if (!searchTerm) {
+                // Show featured books (latest 6)
+                const featured = allBooksHome.slice(-6).reverse();
+                renderFeaturedBooks(featured, grid);
+                return;
+            }
+
+            // Filter books
+            const filtered = allBooksHome.filter(book => {
+                const title = (book.title || '').toLowerCase();
+                const author = (book.author || '').toLowerCase();
+                const category = (book.category || '').toLowerCase();
+
+                return title.includes(searchTerm) ||
+                    author.includes(searchTerm) ||
+                    category.includes(searchTerm);
+            });
+
+            renderFeaturedBooks(filtered, grid);
+
+            if (filtered.length === 0 && window.notify) {
+                notify.info(`No books found for "${searchTerm}"`);
+            }
+        }
+
+        function renderFeaturedBooks(books, grid) {
+            if (books.length === 0) {
+                grid.innerHTML = '<p class="text-center">No books available at the moment.</p>';
+                return;
+            }
+
+            grid.innerHTML = books.map(book => `
+                <div class="book-card">
+                    <div class="book-image-container">
+                        <img src="${book.image_url || 'https://via.placeholder.com/150'}" alt="${book.title}" class="book-image">
+                    </div>
+                    <div class="book-info">
+                        <div class="book-cat">${book.category || 'General'}</div>
+                        <h3 class="book-title">${book.title}</h3>
+                        <p class="book-author">by ${book.author}</p>
+                        <div class="book-footer">
+                            <span class="book-price">${formatPrice(book.price)}</span>
+                            <button class="btn btn-sm" onclick="addToCart(${book.id})">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+
+    <style>
+        /* Hide search in nav on mobile */
+        @media (max-width: 768px) {
+            .nav-search {
+                display: none !important;
+            }
+        }
+    </style>
+
     <script src="js/mobile-menu.js"></script>
 </body>
 
