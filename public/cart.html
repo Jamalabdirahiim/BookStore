@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/notifications.js"></script>
+    <script src="js/mobile-menu.js"></script>
 </head>
 
 <body>
@@ -19,6 +20,11 @@
                     <img src="images/logo.png" alt="BookHaven">
                     <span class="logo-text">BookHaven</span>
                 </a>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
                 <div class="nav-links">
                     <a href="index.html">Home</a>
                     <a href="shop.html">Shop</a>
@@ -193,15 +199,15 @@
                 const itemTotal = item.price * item.quantity;
                 subtotal += itemTotal;
                 return `
-                    <tr>
-                        <td>${item.title}</td>
-                        <td>${formatPrice(item.price)}</td>
-                        <td><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${item.quantity}</span></td>
-                        <td>${formatPrice(itemTotal)}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline" style="color: #ef4444; border-color: #ef4444; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="removeItem(${index})">Remove</button>
-                        </td>
-                    </tr>
+            <tr>
+                <td>${item.title}</td>
+                <td>${formatPrice(item.price)}</td>
+                <td><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${item.quantity}</span></td>
+                <td>${formatPrice(itemTotal)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline" style="color: #ef4444; border-color: #ef4444; padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="removeItem(${index})">Remove</button>
+                </td>
+            </tr>
                 `;
             }).join('');
 
