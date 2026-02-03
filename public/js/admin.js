@@ -262,9 +262,10 @@ if (bookForm) {
                 localStorage.setItem('customBooks', JSON.stringify(customBooks));
 
                 closeBookModal();
+                notify.success(id ? 'Book updated successfully! 📚' : 'Book added successfully! 🎉');
                 initDashboard(); // Refresh
             } else {
-                alert('Error saving book');
+                notify.error('Error saving book. Please try again.');
             }
         } catch (err) {
             console.error(err);
@@ -273,7 +274,9 @@ if (bookForm) {
 }
 
 async function deleteBook(id) {
-    if (!confirm('Are you sure you want to delete this book?')) return;
+    // Custom confirmation using notification system
+    const confirmDelete = window.confirm('Are you sure you want to delete this book?');
+    if (!confirmDelete) return;
 
     try {
         const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
@@ -283,10 +286,14 @@ async function deleteBook(id) {
             customBooks = customBooks.filter(b => b.id != id);
             localStorage.setItem('customBooks', JSON.stringify(customBooks));
 
+            notify.success('Book deleted successfully! 🗑️');
             initDashboard();
+        } else {
+            notify.error('Failed to delete book.');
         }
     } catch (err) {
         console.error(err);
+        notify.error('Error deleting book.');
     }
 }
 
@@ -297,8 +304,14 @@ async function updateOrderStatus(id, status) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status })
         });
-        if (res.ok) initDashboard();
+        if (res.ok) {
+            notify.success('Order status updated! 🚚');
+            initDashboard();
+        } else {
+            notify.error('Failed to update order status.');
+        }
     } catch (err) {
         console.error(err);
+        notify.error('Error updating order status.');
     }
 }

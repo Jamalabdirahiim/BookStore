@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/notifications.js"></script>
     <style>
         .contact-container {
             max-width: 600px;
@@ -153,14 +154,14 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    alert('Message sent successfully!');
+                    notify.success('Message sent successfully! We\'ll get back to you soon. 📧');
                     e.target.reset();
                 } else {
-                    alert('Failed to send message: ' + (result.message || 'Server Error'));
+                    notify.error('Failed to send message: ' + (result.message || 'Server Error'));
                 }
             } catch (err) {
                 console.error(err);
-                alert('Error sending message. Please try again.');
+                notify.error('Error sending message. Please try again.');
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;

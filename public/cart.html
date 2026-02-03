@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/notifications.js"></script>
 </head>
 
 <body>
@@ -284,8 +285,8 @@
                     setTimeout(() => {
                         state.cart = [];
                         saveCart();
-                        alert('Order Placed Successfully with WaafiPay!');
-                        window.location.href = 'index.html';
+                        notify.success('Order Placed Successfully! 🎉');
+                        setTimeout(() => window.location.href = 'index.html', 1500);
                     }, 2000);
                 } else {
                     throw new Error("Payment was successful but order failed to save. Please contact support.");
@@ -296,7 +297,7 @@
                 processText.textContent = "Payment Error";
                 processDetail.textContent = err.message;
                 setTimeout(() => {
-                    alert('Error: ' + err.message);
+                    notify.error('Payment Error: ' + err.message);
                     overlay.classList.add('hidden');
                 }, 3000);
             }

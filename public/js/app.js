@@ -34,8 +34,10 @@ const addToCart = (bookId) => {
     }
 
     saveCart();
-    // Show toast or feedback
-    alert(`${book.title} added to cart!`);
+    // Show toast notification
+    if (window.notify) {
+        notify.success(`${book.title} added to cart! 🛒`);
+    }
 };
 
 /* API Calls */
