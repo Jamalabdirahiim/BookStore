@@ -1014,26 +1014,31 @@ footer::before {
         flex-direction: row;
         padding: 1rem;
         gap: 1rem;
-        align-items: stretch;
+        align-items: center;
+        /* Center vertically */
     }
 
     .book-image-container {
-        width: 120px;
+        width: 100px;
+        /* Fixed width */
+        height: 150px;
+        /* Fixed height (2:3 ratio) */
         flex-shrink: 0;
-        /* Ensure it takes full height of the flex item */
-        align-self: stretch;
+        align-self: center;
+        /* Don't stretch */
         position: relative;
+        border-radius: 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        /* Book shadow */
         overflow: hidden;
-        border-radius: var(--radius-sm);
     }
 
     .book-image {
         width: 100%;
         height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
         object-fit: cover;
+        position: static;
+        /* Reset absolute positioning */
     }
 
     .book-info {
@@ -1138,11 +1143,11 @@ footer::before {
 
     /* Keep horizontal layout but make images slightly smaller */
     .book-image-container {
-        width: 100px;
-        /* Inherit the relative positioning and full height from previous query */
+        width: 90px;
+        height: 135px;
     }
 
-    /* Image styles inherit the absolute positioning from previous query */
+    /* Image styles inherit */
 
     .book-title {
         font-size: 1rem;
