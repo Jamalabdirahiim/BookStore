@@ -131,21 +131,91 @@ function renderBooksTable() {
     if (!tbody) return;
 
     tbody.innerHTML = adminBooks.map((book, idx) => `
-        <tr>
-            <td>${idx + 1}</td>
+        <tr style="transition: all 0.2s ease;">
+            <td style="font-weight: 600; color: #64748b; font-size: 0.9rem;">${idx + 1}</td>
             <td>
-                <img src="${book.image_url}" alt="Cover" style="width: 40px; height: 56px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="
+                    width: 50px; 
+                    height: 70px; 
+                    border-radius: 6px; 
+                    overflow: hidden;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+                    border: 2px solid #f1f5f9;
+                ">
+                    <img src="${book.image_url}" alt="Cover" style="
+                        width: 100%; 
+                        height: 100%; 
+                        object-fit: cover;
+                        display: block;
+                    ">
+                </div>
             </td>
-            <td style="font-weight: 500;">${book.title}</td>
-            <td>${book.author}</td>
-            <td><span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${book.category}</span></td>
-            <td style="font-weight: 600;">$${book.price.toFixed(2)}</td>
+            <td style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">${book.title}</td>
+            <td style="color: #64748b; font-size: 0.9rem;">${book.author}</td>
             <td>
-                <button class="btn btn-sm btn-outline" style="margin-right: 0.5rem;" onclick="editBook('${book.id}')">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteBook('${book.id}')">Delete</button>
+                <span style="
+                    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); 
+                    color: #0369a1; 
+                    padding: 6px 12px; 
+                    border-radius: 6px; 
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    display: inline-block;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                ">${book.category}</span>
+            </td>
+            <td style="font-weight: 700; color: #0f172a; font-size: 1rem;">$${book.price.toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button 
+                        class="btn btn-sm btn-outline" 
+                        style="
+                            padding: 0.5rem 1rem;
+                            border: 2px solid #e2e8f0;
+                            background: white;
+                            color: #64748b;
+                            font-weight: 600;
+                            border-radius: 6px;
+                            transition: all 0.2s ease;
+                        " 
+                        onmouseover="this.style.borderColor='#0f172a'; this.style.color='#0f172a'; this.style.background='#f8fafc'"
+                        onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#64748b'; this.style.background='white'"
+                        onclick="editBook('${book.id}')"
+                    >Edit</button>
+                    <button 
+                        class="btn btn-sm btn-danger" 
+                        style="
+                            padding: 0.5rem 1rem;
+                            background: #ef4444;
+                            color: white;
+                            font-weight: 600;
+                            border: none;
+                            border-radius: 6px;
+                            transition: all 0.2s ease;
+                        "
+                        onmouseover="this.style.background='#dc2626'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 6px -1px rgba(239,68,68,0.3)'"
+                        onmouseout="this.style.background='#ef4444'; this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                        onclick="deleteBook('${book.id}')"
+                    >Delete</button>
+                </div>
             </td>
         </tr>
     `).join('');
+
+    // Add hover effect to rows
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            row.style.background = '#f8fafc';
+            row.style.transform = 'scale(1.002)';
+            row.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+        });
+        row.addEventListener('mouseleave', () => {
+            row.style.background = 'white';
+            row.style.transform = 'scale(1)';
+            row.style.boxShadow = 'none';
+        });
+    });
 }
 
 function renderOrdersTable() {
