@@ -40,6 +40,30 @@
         <div class="container">
             <h1 class="section-title">Browse Our Collection</h1>
 
+            <!-- Search Bar -->
+            <div class="search-container" style="margin-bottom: 2rem;">
+                <div style="position: relative; max-width: 600px; margin: 0 auto;">
+                    <input type="text" id="search-input" placeholder="Search by title, author, or category..." style="
+                            width: 100%;
+                            padding: 1rem 3rem 1rem 1.25rem;
+                            font-size: 1rem;
+                            border: 2px solid var(--light-gray);
+                            border-radius: var(--radius-md);
+                            outline: none;
+                            transition: all 0.3s ease;
+                            font-family: inherit;
+                        " onkeyup="searchBooks()">
+                    <span class="material-icons-round" style="
+                        position: absolute;
+                        right: 1rem;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: var(--medium-gray);
+                        pointer-events: none;
+                    ">search</span>
+                </div>
+            </div>
+
             <!-- Enhanced Filter Section -->
             <div class="filter-section">
                 <div class="filter-group">
@@ -147,6 +171,36 @@
             }
         }
 
+        function searchBooks() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+
+            // If search is empty, show all books (or filtered by category if a filter is active)
+            if (!searchTerm) {
+                const activeFilter = document.querySelector('.filter-btn.active');
+                const category = activeFilter ? activeFilter.textContent.trim() : 'All Books';
+                filterBooks(category === 'All Books' ? 'All' : category);
+                return;
+            }
+
+            // Filter books by search term (title, author, or category)
+            const filtered = allBooks.filter(book => {
+                const title = (book.title || '').toLowerCase();
+                const author = (book.author || '').toLowerCase();
+                const category = (book.category || '').toLowerCase();
+
+                return title.includes(searchTerm) ||
+                    author.includes(searchTerm) ||
+                    category.includes(searchTerm);
+            });
+
+            renderBooks(filtered);
+
+            // Show count
+            if (filtered.length === 0 && window.notify) {
+                notify.info(`No books found for "${searchTerm}"`);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', loadShop);
     </script>
 
@@ -180,6 +234,15 @@
             background: var(--primary-navy);
             color: var(--white);
             border-color: var(--primary-navy);
+        }
+
+        #search-input:focus {
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        #search-input:hover {
+            border-color: var(--medium-gray);
         }
     </style>
 </body>
