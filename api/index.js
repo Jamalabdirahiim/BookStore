@@ -1,9 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const axios = require('axios');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,14 +35,6 @@ try {
     console.error("Failed to load users into cache");
 }
 
-// WaafiPay Credentials
-const WAAFI_CONFIG = {
-    merchantUid: process.env.WAAFI_MERCHANT_UID || "M1001234",
-    apiUserId: process.env.WAAFI_API_USER_ID || "1001234",
-    apiKey: process.env.WAAFI_API_KEY || "API-12345678W",
-    baseUrl: process.env.WAAFI_BASE_URL || "https://api.waafipay.net/asm"
-};
-
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
@@ -50,47 +43,48 @@ app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 const publicPath = path.join(process.cwd(), 'public');
 app.use(express.static(publicPath));
 
-// --- PAYMENT API ---
+// --- PAYMENT API (SIMULATION) ---
 app.post('/api/payment/process', async (req, res) => {
-    const { paymentMethod, amount, phoneNumber, cardDetails } = req.body;
+    const { paymentMethod, amount } = req.body;
+
+    // Simulate processing delay
+    setTimeout(() => {
+        // Always return success for simulation
+        const transactionId = "TXN" + Date.now();
+        res.json({ success: true, transactionId: transactionId });
+    }, 2000);
+});
+
+// --- CONTACT API (Real Email) ---
+app.post('/api/contact', async (req, res) => {
+    const { name, email, message } = req.body;
+
+    // Check if credentials exist
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+        return res.status(500).json({ success: false, message: 'Server email not configured.' });
+    }
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASS
+        }
+    });
+
+    const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: 'axmedc.xakiim@gmail.com', // User's email to receive messages
+        subject: `New Contact from ${name} (BookHaven)`,
+        text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`
+    };
+
     try {
-        const requestId = Date.now().toString();
-        let paymentParams = {
-            schemaVersion: "1.0",
-            requestId: requestId,
-            timestamp: requestId,
-            channelName: "WEB",
-            serviceName: "API_PURCHASE",
-            serviceParams: {
-                merchantUid: WAAFI_CONFIG.merchantUid,
-                apiUserId: WAAFI_CONFIG.apiUserId,
-                apiKey: WAAFI_CONFIG.apiKey,
-                paymentMethod: paymentMethod === 'evc' ? "MWALLET_ACCOUNT" : "CREDIT_CARD",
-                payerInfo: {},
-                transactionInfo: {
-                    amount: amount.toString(),
-                    currency: "USD",
-                    description: "Bookstore Purchase"
-                }
-            }
-        };
-
-        if (paymentMethod === 'evc') {
-            paymentParams.serviceParams.payerInfo.accountNo = phoneNumber;
-        } else {
-            paymentParams.serviceParams.payerInfo.cardNo = cardDetails.number;
-            paymentParams.serviceParams.payerInfo.expiryDate = cardDetails.expiry;
-            paymentParams.serviceParams.payerInfo.cvv2 = cardDetails.cvv;
-        }
-
-        const response = await axios.post(WAAFI_CONFIG.baseUrl, paymentParams);
-        if (response.data.responseCode === "2001") {
-            res.json({ success: true, transactionId: response.data.params?.transactionId });
-        } else {
-            res.status(400).json({ success: false, message: response.data.responseMsg || "Payment Rejected" });
-        }
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: 'Email sent successfully!' });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Payment Gateway Error" });
+        console.error('Email Error:', error);
+        res.status(500).json({ success: false, message: 'Failed to send email.' });
     }
 });
 
