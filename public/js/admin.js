@@ -153,7 +153,17 @@ function renderOrdersTable() {
     if (!tbody) return;
 
     tbody.innerHTML = adminOrders.map((order, idx) => {
-        const items = JSON.parse(order.items || '[]');
+        let items = [];
+        if (typeof order.items === 'string') {
+            try {
+                items = JSON.parse(order.items);
+            } catch (e) {
+                console.error("Failed to parse items for order", order.id);
+            }
+        } else if (Array.isArray(order.items)) {
+            items = order.items;
+        }
+
         const itemsSummary = items.map(i => `${i.title} (x${i.quantity})`).join(', ');
 
         return `
