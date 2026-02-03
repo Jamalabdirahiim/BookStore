@@ -36,38 +36,52 @@
         </div>
     </header>
 
-    <main class="section">
+    <main class="section" style="padding-top: 3rem;">
         <div class="container">
-            <h1 class="section-title">Browse Our Collection</h1>
+            <h1 class="section-title" style="margin-bottom: 2rem;">Browse Our Collection</h1>
 
-            <!-- Search Bar -->
-            <div class="search-container" style="margin-bottom: 2rem;">
-                <div style="position: relative; max-width: 600px; margin: 0 auto;">
-                    <input type="text" id="search-input" placeholder="Search by title, author, or category..." style="
-                            width: 100%;
-                            padding: 1rem 3rem 1rem 1.25rem;
-                            font-size: 1rem;
-                            border: 2px solid var(--light-gray);
-                            border-radius: var(--radius-md);
-                            outline: none;
-                            transition: all 0.3s ease;
-                            font-family: inherit;
-                        " onkeyup="searchBooks()">
-                    <span class="material-icons-round" style="
-                        position: absolute;
-                        right: 1rem;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        color: var(--medium-gray);
-                        pointer-events: none;
-                    ">search</span>
+            <!-- Search Section -->
+            <div
+                style="background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 2rem;">
+                <div style="max-width: 700px; margin: 0 auto;">
+                    <label
+                        style="display: block; font-weight: 600; color: var(--primary-navy); margin-bottom: 0.75rem; font-size: 0.95rem;">
+                        🔍 Search Books
+                    </label>
+                    <div style="position: relative;">
+                        <input type="text" id="search-input" placeholder="Search by title, author, or category..."
+                            style="
+                                width: 100%;
+                                padding: 1rem 3.5rem 1rem 1.25rem;
+                                font-size: 1rem;
+                                border: 2px solid #e2e8f0;
+                                border-radius: 12px;
+                                outline: none;
+                                transition: all 0.3s ease;
+                                font-family: inherit;
+                                background: #f8fafc;
+                            " onkeyup="searchBooks()"
+                            onfocus="this.style.borderColor='#d4af37'; this.style.background='white'; this.style.boxShadow='0 0 0 3px rgba(212,175,55,0.1)'"
+                            onblur="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc'; this.style.boxShadow='none'">
+                        <span class="material-icons-round" style="
+                            position: absolute;
+                            right: 1.25rem;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            color: #94a3b8;
+                            pointer-events: none;
+                            font-size: 24px;
+                        ">search</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Enhanced Filter Section -->
-            <div class="filter-section">
+            <div class="filter-section" style="margin-bottom: 2.5rem;">
                 <div class="filter-group">
-                    <label>Category:</label>
+                    <label
+                        style="font-weight: 600; color: var(--primary-navy); margin-bottom: 0.75rem; display: block;">Filter
+                        by Category:</label>
                     <div class="filters" id="category-filters">
                         <button class="filter-btn active" onclick="filterBooks('All')">All Books</button>
                         <button class="filter-btn" onclick="filterBooks('Self-Help')">Self-Help</button>
