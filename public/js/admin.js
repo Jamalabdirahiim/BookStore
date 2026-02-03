@@ -81,7 +81,24 @@ async function fetchAdminData() {
         });
 
         adminBooks = combinedBooks;
-        adminOrders = ordersData.data || [];
+        adminBooks = combinedBooks;
+
+        // Merge with local storage orders
+        const localOrders = JSON.parse(localStorage.getItem('localOrders')) || [];
+        let combinedOrders = [...(ordersData.data || [])];
+
+        localOrders.forEach(lo => {
+            const idx = combinedOrders.findIndex(o => String(o.id) === String(lo.id));
+            if (idx === -1) {
+                // Only add if not already from server
+                combinedOrders.push(lo);
+            }
+        });
+
+        // Sort by date desc
+        combinedOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        adminOrders = combinedOrders;
     } catch (err) {
         console.error("Error loading admin data", err);
     }
@@ -308,10 +325,32 @@ async function updateOrderStatus(id, status) {
             notify.success('Order status updated! 🚚');
             initDashboard();
         } else {
-            notify.error('Failed to update order status.');
+            // If API fails (maybe it's a local-only order), try updating local storage
+            const localOrders = JSON.parse(localStorage.getItem('localOrders')) || [];
+            const idx = localOrders.findIndex(o => String(o.id) === String(id));
+
+            if (idx !== -1) {
+                localOrders[idx].status = status;
+                localStorage.setItem('localOrders', JSON.stringify(localOrders));
+                notify.success('Order status updated! (Local) 🚚');
+                initDashboard();
+            } else {
+                notify.error('Failed to update order status.');
+            }
         }
     } catch (err) {
         console.error(err);
-        notify.error('Error updating order status.');
+        // Fallback for local orders if fetch fails completely
+        const localOrders = JSON.parse(localStorage.getItem('localOrders')) || [];
+        const idx = localOrders.findIndex(o => String(o.id) === String(id));
+
+        if (idx !== -1) {
+            localOrders[idx].status = status;
+            localStorage.setItem('localOrders', JSON.stringify(localOrders));
+            notify.success('Order status updated! (Local Setup) 🚚');
+            initDashboard();
+        } else {
+            notify.error('Error updating order status.');
+        }
     }
 }

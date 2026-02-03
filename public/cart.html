@@ -286,6 +286,20 @@
                 });
 
                 if (orderRes.ok) {
+                    // PERSISTENCE FIX: Save order to local storage for Admin Panel visibility (serverless fix)
+                    const newOrder = await orderRes.json(); // Get the created object from backend response if possible
+                    // Fallback if backend doesn't return full object, we construct it
+                    const persistedOrder = {
+                        id: newOrder.id || 'ORD-' + Date.now(),
+                        ...order,
+                        date: new Date().toISOString(),
+                        status: 'Pending'
+                    };
+
+                    const localOrders = JSON.parse(localStorage.getItem('localOrders')) || [];
+                    localOrders.push(persistedOrder);
+                    localStorage.setItem('localOrders', JSON.stringify(localOrders));
+
                     processText.textContent = "Order Confirmed!";
                     processDetail.textContent = "Redirecting you to the home page.";
                     setTimeout(() => {
