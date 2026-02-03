@@ -1020,11 +1020,19 @@ footer::before {
     .book-image-container {
         width: 120px;
         flex-shrink: 0;
+        /* Ensure it takes full height of the flex item */
+        align-self: stretch;
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-sm);
     }
 
     .book-image {
-        width: 120px;
-        height: 180px;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
         object-fit: cover;
     }
 
@@ -1131,12 +1139,10 @@ footer::before {
     /* Keep horizontal layout but make images slightly smaller */
     .book-image-container {
         width: 100px;
+        /* Inherit the relative positioning and full height from previous query */
     }
 
-    .book-image {
-        width: 100px;
-        height: 150px;
-    }
+    /* Image styles inherit the absolute positioning from previous query */
 
     .book-title {
         font-size: 1rem;
